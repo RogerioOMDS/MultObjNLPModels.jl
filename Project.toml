@@ -1,0 +1,7 @@
+name = "MultObjNLPModels"
+uuid = "a499813d-4b4d-4c2b-9e9c-5e81d35de83c"
+authors = ["Abel Soares Siqueira <abel.s.siqueira@gmail.com>"]
+version = "0.1.0"
+
+[deps]
+NLPModels = "a4795742-8479-5a88-8948-cc11e1c8c1a6"
