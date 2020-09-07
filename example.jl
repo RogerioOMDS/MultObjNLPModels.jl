@@ -54,4 +54,5 @@ function NLPModels.hprod!(nlp :: ExampleMONLP, i :: Integer, x :: AbstractVector
     Hv[2] = -400 * x[1] * v[1] + 200 * v[2]
   end
   return Hv
+end
 
