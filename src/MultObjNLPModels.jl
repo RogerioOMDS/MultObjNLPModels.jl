@@ -1,7 +1,5 @@
 module MultObjNLPModels
 
-export RegressionModel, LinearRegressionModel, LogisticRegressionModel # vi que isso é feito no NLPModels, mas ainda assim não consegui 
-
 using NLPModels
 
 include("meta.jl")

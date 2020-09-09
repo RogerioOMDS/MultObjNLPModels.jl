@@ -1,5 +1,8 @@
 using LinearAlgebra, Random, SolverTools
 
+NLPModels.has_bounds(meta::MultObjNLPMeta) = length(meta.ifree) < meta.nvar 
+NLPModels.unconstrained(meta::MultObjNLPMeta) = meta.ncon == 0 && !has_bounds(meta)
+
 export sthocastic_gradient
 
 function sthocastic_gradient(
@@ -17,13 +20,13 @@ function sthocastic_gradient(
   n = nlp.meta.nobj
   g = similar(β)
 
-  # f = nlp.ℓ(y, nlp.h(X,β))
-  # N = norm(nlp.ℓ(y, nlp.h(X,β)))
+  # f = nlp.ℓ(nlp.y[i], nlp.h(nlp.X[i,:],β))
+  # N = norm(nlp.ℓ(nlp.y, nlp.h(nlp.X,β)))
 
   # ϵt = atol + rtol*N
-  # Δt = time() - start_time
+  Δt = time() - start_time
   # solved = N < ϵt
-  # tired = (Δt > max_time) || (iter > max_eval)
+  tired = (Δt > max_time) || (iter > max_eval)
 
   # @info log_header([:iter, :f],
   #                  [Int, Float64],
@@ -31,31 +34,31 @@ function sthocastic_gradient(
 
   # @info log_row(Any[iter, f])
 
-  # while !(solved || tired)
-  for k = 1:10n
+  for k = 1:30n # I got better results with this number
     for i in shuffle(1:n)
-      β -= γ * grad!(nlp, i, β, g) #preciso arrumar esse g
+      β -= γ * grad!(nlp, i, β, g) 
     end
+
+    Δt = time() - start_time
+    iter+=1
+    tired = (Δt > max_time) || (iter > max_eval)
   end
 
-  # status = if solved
-  #   :first_order
-  # elseif tired
-  #   if Δt >: max_time
-  #     :max_time
-  #   else
-  #     :max_eval
-  #   end
-  # else
-  #   :unknown
-  # end
+  status = if (iter == 30n)
+    :first_order
+  elseif tired
+    if Δt >: max_time
+      :max_time
+    else
+      :max_eval
+    end
+  else
+    :unknown
+  end
 
-    # return GenericExecutionStats(status, nlp;  #ainda não arrumei esse trecho porque não ta rodando
-    #                               solution = β,
-    #                               objective=f,
-    #                               elapsed_time=Δt,
-    #                               iter=iter)
-
-    # y_pred = [nlp.h(nlp.X[i,:],β) > 0.5 ? 1.0 : 0.0 for i=1:n ]
-    return β
+  return GenericExecutionStats(status, nlp;  
+                                solution = β,
+                                #= objective=f, =#
+                                elapsed_time=Δt,
+                                iter=iter)
 end
