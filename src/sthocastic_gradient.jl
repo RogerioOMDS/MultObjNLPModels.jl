@@ -53,7 +53,7 @@ function sthocastic_gradient(
   # while !(γ < 0.01 || tired) # sounds good. Doesnt work
 
     if learning_rate == :optimal
-      γ = 1/(α * (1e3 + iter)) 
+      γ = 1 / (α * (1e3 + iter)) 
     elseif learning_rate == :invscaling 
       γ = 1e-2 / (iter+1)^(power_t)
     elseif learning_rate == :constant
