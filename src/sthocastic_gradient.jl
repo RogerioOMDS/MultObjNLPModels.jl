@@ -66,8 +66,8 @@ function sthocastic_gradient(
     βavg = βavg/n # test later
 
     Δt = time() - start_time
-    tired = (Δt > max_time) 
-    solved = (γ < 1e-2)
+    tired = Δt > max_time
+    solved = γ < 1e-2
     iter += 1
     itermax = iter > max_eval
   end
