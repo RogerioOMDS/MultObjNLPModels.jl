@@ -22,7 +22,7 @@ function sthocastic_gradient(
   iter = 0
   start_time = time()
   β = nlp.meta.x0
-  βavg = similar(β) # test later
+  βavg = similar(β)
   n = nlp.meta.nobj
   g = similar(β)
   f = NLPModels.obj(nlp, β)
