@@ -53,7 +53,7 @@ function sthocastic_gradient(
     if learning_rate == :optimal
       γ = 1 / (α * (1e3 + iter)) 
     elseif learning_rate == :invscaling 
-      γ = 1e-2 / (iter+1)^(power_t)
+      γ = 1e-2 / (iter + 1)^power_t
     end
 
     βavg .= 0
