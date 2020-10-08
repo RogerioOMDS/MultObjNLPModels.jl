@@ -85,9 +85,9 @@ function sthocastic_gradient(
   end
 
   return GenericExecutionStats(status, nlp;  
-                                solution = β,
-                                solver_specific=Dict(:βavg=>βavg),
-                                elapsed_time=Δt,
-                                iter=iter
-                                )
+                               solution=β,
+                               solver_specific=Dict(:βavg => βavg),
+                               elapsed_time=Δt,
+                               iter=iter
+                               )
 end
