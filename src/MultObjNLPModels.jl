@@ -8,4 +8,5 @@ include("api.jl")
 
 include("regression_model.jl")
 include("sthocastic_gradient.jl")
+
 end # module
