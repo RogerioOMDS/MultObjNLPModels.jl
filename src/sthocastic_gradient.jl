@@ -26,7 +26,7 @@ function sthocastic_gradient(
   n = nlp.meta.nobj
   g = similar(β)
   f = NLPModels.obj(nlp, β)
-  NLPModels.grad!(nlp,β,g)
+  NLPModels.grad!(nlp, β, g)
   
   Δt = time() - start_time
   
