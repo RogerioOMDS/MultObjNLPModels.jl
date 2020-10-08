@@ -12,7 +12,7 @@ function sthocastic_gradient(
     α::Float64 = 1e-2, # for penalty
     ρ::Float64 = 0.85, # just for elasticnet
     penalty::Symbol = :l2, 
-    max_eval::Int=50,
+    max_eval::Int = 50,
     max_time::Float64 = 60.0,
     atol::Float64 = 1e-8,
     rtol::Float64 = 1e-8,
