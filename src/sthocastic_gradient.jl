@@ -70,8 +70,8 @@ function sthocastic_gradient(
     Δt = time() - start_time
     tired = (Δt > max_time) 
     solved = (γ < 1e-2)
+    iter += 1
     itermax = iter > max_eval
-    iter+=1
   end
 
   status = if (iter == max_eval)    
