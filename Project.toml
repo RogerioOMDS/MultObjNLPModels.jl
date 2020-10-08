@@ -4,6 +4,22 @@ authors = ["Abel Soares Siqueira <abel.s.siqueira@gmail.com>"]
 version = "0.1.0"
 
 [deps]
+FastClosures = "9aa1b823-49e4-5ca5-8b0f-3971ec8bab6a"
 ForwardDiff = "f6369f11-7733-5829-9624-2563aa707210"
+LinearAlgebra = "37e2e46d-f89d-539d-b4ee-838fcccc9c8e"
+LinearOperators = "5c8ed15e-5a4c-59e4-a42b-c7e8811fb125"
 NLPModels = "a4795742-8479-5a88-8948-cc11e1c8c1a6"
+Random = "9a3f8284-a2c9-5f02-9a11-845980a1fd5c"
 SolverTools = "b5612192-2639-5dc1-abfe-fbedd65fab29"
+SparseArrays = "2f01184e-e22b-5df5-ae63-d93ebab69eaf"
+
+[compat]
+FastClosures = "0.2.1, 0.3.0"
+LinearOperators = "1.1"
+NLPModels = "0.13"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]

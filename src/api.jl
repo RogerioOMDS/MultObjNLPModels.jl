@@ -1,6 +1,4 @@
-export AbstractMultObjModel,
-       obj, grad!, hess_structure!, hess_coord!, hprod!,
-       increment!
+export AbstractMultObjModel
 
 """
     AbstractMultObjModel
@@ -16,51 +14,6 @@ An `AbstractMultObjModel` is expected to have:
 - `meta :: MultObjNLPMeta`
 """
 abstract type AbstractMultObjModel <: AbstractNLPModel end
-
-sum_counters(nls :: AbstractMultObjModel) = sum_counters(nls.counters)
-
-import Base.show
-show_header(io :: IO, nlp :: AbstractMultObjModel) = println(io, typeof(nlp))
-
-function show(io :: IO, nlp :: AbstractMultObjModel)
-  show_header(io, nlp)
-  show(io, nlp.meta)
-  show(io, nlp.counters)
-end
-
-for counter in fieldnames(MultObjCounters)
-  counter == :counters && continue
-  @eval begin
-    """
-    $($counter)(nlp)
-
-    Get the number of `$(split("$($counter)", "_")[2])` evaluations.
-    """
-    $counter(nls :: AbstractMultObjModel) = nls.counters.$counter
-    export $counter
-  end
-end
-
-for counter in fieldnames(Counters)
-  @eval begin
-    $counter(nls :: AbstractMultObjModel) = nls.counters.counters.$counter
-    export $counter
-  end
-end
-
-"""
-    increment!(nlp, s, i)
-
-Increment counter `s[i]` of problem `nlp`.
-"""
-function increment!(nlp :: AbstractMultObjModel, s :: Symbol, i :: Integer)
-  getproperty(nlp.counters, s)[i] += 1
-end
-
-function NLPModels.reset!(nls :: AbstractMultObjModel)
-  reset!(nls.counters)
-  return nls
-end
 
 # New multiple objective functions:
 
@@ -79,11 +32,35 @@ Evaluate ``∇fᵢ(x)``, the gradient of the i-th objective function at `x` in p
 function grad! end
 
 """
+    g = grad(nlp, i, x)
+
+Evaluate ``∇fᵢ(x)``, the gradient of the i-th objective function at `x`.
+"""
+function grad(nlp :: AbstractMultObjModel, i :: Integer, x :: AbstractVector)
+  @lencheck nlp.meta.nvar x
+  NLPModels.@rangecheck 1 nlp.meta.nobj i
+  g = zeros(eltype(x), nlp.meta.nvar)
+  grad!(nlp, i, x, g)
+end
+
+"""
     hess_structure!(nlp, i, rows, cols)
 
 Return the structure of the Lagrangian Hessian in sparse coordinate format in place.
 """
 function hess_structure! end
+
+"""
+    hess_structure!(nlp, i)
+
+Return the structure of the Lagrangian Hessian in sparse coordinate format.
+"""
+function hess_structure(nlp :: AbstractMultObjModel, i :: Integer)
+  NLPModels.@rangecheck 1 nlp.meta.nobj i
+  rows = zeros(Int, nlp.meta.nnzhi[i])
+  cols = zeros(Int, nlp.meta.nnzhi[i])
+  hess_structure!(nlp, i, rows, cols)
+end
 
 """
     vals = hess_coord!(nlp, i, x, vals)
@@ -95,6 +72,20 @@ Only the lower triangle is returned.
 function hess_coord! end
 
 """
+    vals = hess_coord(nlp, i, x)
+
+Evaluate the i-th objective Hessian at `x` in sparse coordinate format,
+i.e., ``∇²fᵢ(x)``.
+Only the lower triangle is returned.
+"""
+function hess_coord(nlp :: AbstractMultObjModel, i :: Integer, x :: AbstractVector)
+  @lencheck nlp.meta.nvar x
+  NLPModels.@rangecheck 1 nlp.meta.nobj i
+  vals = zeros(eltype(x), nlp.meta.nnzhi[i])
+  hess_coord!(nlp, i, x, vals)
+end
+
+"""
     Hv = hprod!(nlp, i, x, v, Hv)
 
 Evaluate the product of the i-th objective Hessian at `x` with the vector `v` in
@@ -102,13 +93,72 @@ place, where the objective Hessian is ``∇²fᵢ(x)``.
 """
 function hprod! end
 
+"""
+    Hv = hprod(nlp, i, x, v)
+
+Evaluate the product of the i-th objective Hessian at `x` with the vector `v`,
+where the objective Hessian is ``∇²fᵢ(x)``.
+"""
+function hprod(nlp :: AbstractMultObjModel, i :: Integer, x :: AbstractVector, v :: AbstractVector)
+  @lencheck nlp.meta.nvar x v
+  NLPModels.@rangecheck 1 nlp.meta.nobj i
+  Hv = zeros(eltype(x), nlp.meta.nvar)
+  hprod!(nlp, i, x, v, Hv)
+end
+
+"""
+    Hx = hess(nlp, i, x)
+
+Evaluate the i-th objective Hessian at `x` as a sparse matrix.
+Only the lower triangle is returned.
+"""
+function hess(nlp :: AbstractMultObjModel, i :: Integer, x :: AbstractVector)
+  @lencheck nlp.meta.nvar x
+  NLPModels.@rangecheck 1 nlp.meta.nobj i
+  rows, cols = hess_structure(nlp, i)
+  vals = hess_coord(nlp, i, x)
+  sparse(rows, cols, vals, nlp.meta.nvar, nlp.meta.nvar)
+end
+
+"""
+    H = hess_op(nlp, i, x)
+
+Return the objective Hessian at `x` as a linear operator.
+The resulting object may be used as if it were a
+matrix, e.g., `H * v`.
+"""
+function hess_op(nlp :: AbstractMultObjModel, i :: Integer, x :: AbstractVector)
+  @lencheck nlp.meta.nvar x
+  NLPModels.@rangecheck 1 nlp.meta.nobj i
+  prod = @closure v -> hprod(nlp, i, x, v)
+  return LinearOperator{eltype(x)}(nlp.meta.nvar, nlp.meta.nvar,
+                                   true, true, prod, prod, prod)
+end
+
+"""
+    H = hess_op!(nlp, i, x, Hv)
+
+Return the objective Hessian at `x` as a linear operator.
+The resulting object may be used as if it were a matrix, e.g., `H * v`.
+The vector `Hv` is used as preallocated storage for the operation. 
+"""
+function hess_op!(nlp :: AbstractMultObjModel, i :: Integer, x :: AbstractVector, Hv :: AbstractVector)
+  @lencheck nlp.meta.nvar x Hv
+  NLPModels.@rangecheck 1 nlp.meta.nobj i
+  prod = @closure v -> hprod!(nlp, i, x, v, Hv)
+  return LinearOperator{eltype(x)}(nlp.meta.nvar, nlp.meta.nvar,
+                                   true, true, prod, prod, prod)
+end
+
 # NLPModels functions
 
 function NLPModels.obj(nlp :: AbstractMultObjModel, x :: AbstractVector)
+  @lencheck nlp.meta.nvar x
   return sum(obj(nlp, i, x) * nlp.meta.weights[i] for i = 1:nlp.meta.nobj)
 end
 
 function NLPModels.grad!(nlp :: AbstractMultObjModel, x :: AbstractVector{T}, g :: AbstractVector) where T
+  @lencheck nlp.meta.nvar x g
   fill!(g, zero(T))
   gi = fill!(similar(g), zero(T))
   for i = 1:nlp.meta.nobj
@@ -118,16 +168,40 @@ function NLPModels.grad!(nlp :: AbstractMultObjModel, x :: AbstractVector{T}, g 
   return g
 end
 
-function NLPModels.hess_structure!(nlp :: AbstractMultObjModel, hrows :: AbstractVector{<: Integer}, hcols :: AbstractVector{<: Integer})
+# ∇²f(x) = ∑ᵢ σᵢ ∇²fᵢ(x)
+# rows = [rows₁, …, rowsₚ]
+# cols = [cols₁, …, colsₚ]
+function NLPModels.hess_structure!(nlp :: AbstractMultObjModel, rows :: AbstractVector{<: Integer}, cols :: AbstractVector{<: Integer})
+  @lencheck nlp.meta.nnzh rows cols
+  c = 0
+  for i = 1:nlp.meta.nobj
+    nnzi = nlp.meta.nnzhi[i]
+    idx = c .+ (1:nnzi)
+    @views hess_structure!(nlp, i, rows[idx], cols[idx])
+    c += nnzi
+  end
+  return rows, cols
 end
 
-function NLPModels.hess_coord!(nlp :: AbstractMultObjModel, x :: AbstractVector{T}, hvals :: AbstractVector; obj_weight :: Real=one(T)) where T
+function NLPModels.hess_coord!(nlp :: AbstractMultObjModel, x :: AbstractVector{T}, vals :: AbstractVector; obj_weight :: Real=one(T)) where T
+  @lencheck nlp.meta.nvar x
+  @lencheck nlp.meta.nnzh vals
+  c = 0
+  for i = 1:nlp.meta.nobj
+    nnzi = nlp.meta.nnzhi[i]
+    idx = c .+ (1:nnzi)
+    @views hess_coord!(nlp, i, x, vals[idx])
+    vals[idx] .*= obj_weight * nlp.meta.weights[i]
+    c += nnzi
+  end
+  return vals
 end
 
-function NLPModels.hess_coord!(nlp :: AbstractMultObjModel, x :: AbstractVector{T}, y :: AbstractVector, hvals :: AbstractVector; obj_weight :: Real=one(T)) where T
+function NLPModels.hess_coord!(nlp :: AbstractMultObjModel, x :: AbstractVector{T}, y :: AbstractVector, vals :: AbstractVector; obj_weight :: Real=one(T)) where T
 end
 
 function NLPModels.hprod!(nlp :: AbstractMultObjModel, x :: AbstractVector{T}, v :: AbstractVector, Hv :: AbstractVector; obj_weight :: Real=one(T)) where T
+  @lencheck nlp.meta.nvar x v Hv
   fill!(Hv, zero(T))
   Hiv = fill!(similar(Hv), zero(T))
   for i = 1:nlp.meta.nobj
