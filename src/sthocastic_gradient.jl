@@ -49,7 +49,6 @@ function sthocastic_gradient(
   
 
   for k = 1:max_eval
-  # while !(γ < 0.01 || tired) # sounds good. Doesnt work
 
     if learning_rate == :optimal
       γ = 1 / (α * (1e3 + iter)) 
