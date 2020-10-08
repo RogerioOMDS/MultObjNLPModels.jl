@@ -44,7 +44,7 @@ function sthocastic_gradient(
   elseif penalty == :l1
     β -> sign.(β)
   elseif penalty == :elasticnet
-    β -> ρ * β + (1-ρ) * sign.(β)
+    β -> ρ * β + (1 - ρ) * sign.(β)
   end
   
 
