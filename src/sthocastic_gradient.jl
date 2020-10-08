@@ -56,8 +56,6 @@ function sthocastic_gradient(
       γ = 1 / (α * (1e3 + iter)) 
     elseif learning_rate == :invscaling 
       γ = 1e-2 / (iter+1)^(power_t)
-    elseif learning_rate == :constant
-      γ = γ    
     end
 
     βavg .= 0 # test later
