@@ -30,7 +30,10 @@ function setproperty!(c :: MultObjCounters, f :: Symbol, x)
 end
 
 function sum_counters(c :: MultObjCounters)
-  s = sum_counters(c.counters)
+  s = 0
+  for field in fieldnames(Counters)
+    s += getfield(c.counters, field)
+  end
   for field in fieldnames(MultObjCounters)
     field == :counters && continue
     s += sum(getfield(c, field))
