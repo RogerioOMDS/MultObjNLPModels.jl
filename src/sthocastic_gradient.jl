@@ -29,7 +29,6 @@ function sthocastic_gradient(
   NLPModels.grad!(nlp, β, g)
   
   Δt = time() - start_time
-  
   tired = (Δt > max_time) 
   itermax = iter > max_eval
   
