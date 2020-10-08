@@ -56,12 +56,12 @@ function sthocastic_gradient(
       γ = 1e-2 / (iter+1)^(power_t)
     end
 
-    βavg .= 0 # test later
+    βavg .= 0
     for i in shuffle(1:n)
       β -= γ * (α * P(β) + grad!(nlp, i, β, g))
-      βavg += β # test later
+      βavg += β
     end
-    βavg = βavg/n # test later
+    βavg = βavg / n
 
     Δt = time() - start_time
     tired = Δt > max_time
