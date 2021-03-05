@@ -25,7 +25,7 @@ struct MultObjNLPMeta <: AbstractNLPModelMeta
   weights  :: Vector          # weights of each objective
   objtypes :: Vector{Symbol}  # types of the objectives (:lin, :quad, :gen)
   nnzhi    :: Vector{Int}     # number of elements needed to store the nonzeros in the sparse Hessian of the i-th objective
-  
+
   nvar :: Int       # number of variables
   x0   :: Vector    # initial guess
   lvar :: Vector    # vector of lower bounds
